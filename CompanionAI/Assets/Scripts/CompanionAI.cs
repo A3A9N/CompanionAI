@@ -4,8 +4,9 @@ using UnityEngine.AI;
 public class CompanionAI : MonoBehaviour
 {
     public Transform player;
-    public float followDistance = 5f;
-    public float stopDistance = 2f;
+    public float minDistance = 2f;   
+    public float idealDistance = 3.5f;
+    public float maxDistance = 6f;    
     private PlayerHealth playerHealth;
     public float helpDuration = 2f;
     private float helpTimer;
@@ -47,18 +48,29 @@ public class CompanionAI : MonoBehaviour
 
 
             case CompanionState.Idle:
-                if (distance < followDistance)
+                if (distance < idealDistance)
                     currentState = CompanionState.Follow;
                 break;
 
             case CompanionState.Follow:
                 if (!agent.isOnNavMesh) return;
 
-                if (distance > stopDistance)
+                if (distance > maxDistance)
+                {
                     agent.SetDestination(player.position);
+                }
+                else if (distance < minDistance)
+                {
+                    Vector3 dir = (transform.position - player.position).normalized;
+                    Vector3 targetPos = player.position + dir * idealDistance;
+                    agent.SetDestination(targetPos);
+                }
                 else
+                {
                     agent.ResetPath();
+                }
                 break;
+
         }
     }
 }
