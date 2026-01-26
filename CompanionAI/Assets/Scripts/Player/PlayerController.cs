@@ -2,20 +2,51 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public float speed = 5f;
+    public float speed = 4f;
+    public float rotationSpeed = 10f;
+
+    CharacterController controller;
+    Animator animator;
+    Transform cam;
+
+    void Start()
+    {
+        controller = GetComponent<CharacterController>();
+        animator = GetComponentInChildren<Animator>();
+        cam = Camera.main.transform;
+    }
 
     void Update()
     {
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
 
-        Vector3 move = new Vector3(h, 0, v);
-        transform.Translate(move * speed * Time.deltaTime, Space.World);
+        Vector3 input = new Vector3(h, 0, v);
 
-        if (Input.GetKeyDown(KeyCode.H))
+        if (input.magnitude < 0.1f)
         {
-            GetComponent<PlayerHealth>().TakeDamage(10);
+            animator.SetFloat("Speed", 0f);
+            return;
         }
 
+        Vector3 camForward = cam.forward;
+        camForward.y = 0;
+        camForward.Normalize();
+
+        Vector3 camRight = cam.right;
+
+        Vector3 moveDir = (camForward * v + camRight * h).normalized;
+
+
+        controller.Move(moveDir * speed * Time.deltaTime);
+
+        Quaternion targetRotation = Quaternion.LookRotation(moveDir);
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRotation,
+            rotationSpeed * Time.deltaTime
+        );
+
+        animator.SetFloat("Speed", 1f);
     }
 }
